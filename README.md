@@ -51,7 +51,7 @@ To evaluate the generalization capability of segmentation models, samples were c
 - Different colors represent different satellite sensors, ensuring that the multi-source data is not spatially biased.
 
 <p align="center">
-  <img src="figures/Fig5_Geo_Distribution.png" width="90%" alt="Geographical Distribution Map">
+  <img src="figs/Fig5_Geo_Distribution.png" width="90%" alt="Geographical Distribution Map">
 </p>
 <p align="center">
   <em>Figure 5: Global geographical distribution of the dataset scenes, color-coded by satellite sensor (e.g., Red: Landsat-5, Purple: Sentinel-2).</em>
