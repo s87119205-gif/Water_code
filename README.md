@@ -22,21 +22,21 @@ Deep learning-based water bodies mapping using Landsat-5, 7, 8 , 9 images and Se
 ### 1. Statistical Distribution
 The dataset is composed of diverse scenes with varying water coverage ratios. 
 
-- **Fig 1(a)** illustrates the pixel-level contribution from each satellite platform.
-- **Fig 1(b)** shows the global class balance between water and non-water pixels.
+- **Fig 1 (a)** illustrates the pixel-level contribution from each satellite platform.
+- **Fig 1 (b)** shows the global class balance between water and non-water pixels.
 - **Fig 2** provides the quantitative breakdown of scene counts per satellite sensor.
 - **Fig 4** displays the variability of water coverage per image.
 
 <p align="center">
-  <img src="figures/Fig1_Distribution_Pies.png" width="48%" alt="Pixel Distribution">
-  <img src="figures/Fig2_Scene_Counts.png" width="48%" alt="Scene Counts">
+  <img src="figs/Fig1_Distribution_Pies.png" width="48%" alt="Pixel Distribution">
+  <img src="figs/Fig2_Scene_Counts.png" width="48%" alt="Scene Counts">
 </p>
 <p align="center">
   <em>Figure 1: Pixel-level distribution (Left) & Figure 2: Scene counts per satellite (Right).</em>
 </p>
 
 <p align="center">
-  <img src="figures/Fig4_Water_Ratio_Box.png" width="60%" alt="Water Ratio Boxplot">
+  <img src="figs/Fig4_Water_Ratio_Box.png" width="60%" alt="Water Ratio Boxplot">
 </p>
 <p align="center">
   <em>Figure 4: Distribution of water pixel ratios per scene.</em>
@@ -64,7 +64,7 @@ The dataset includes high-resolution multispectral images with corresponding bin
 - **Ground Truth:** Binary masks where white represents water bodies and black represents the background.
 
 <p align="center">
-  <img src="figures/Fig3_Visual_Samples.png" width="80%" alt="Visual Samples">
+  <img src="figs/Fig3_Visual_Samples.png" width="80%" alt="Visual Samples">
 </p>
 <p align="center">
   <em>Figure 3: Representative samples of optical images (Left) and their corresponding ground truth labels (Right).</em>
