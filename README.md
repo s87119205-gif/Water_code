@@ -28,7 +28,7 @@ The dataset is composed of diverse scenes with varying water coverage ratios.
 - **Fig 4** displays the variability of water coverage per image.
 
 <p align="center">
-  <img src="figs/Fig1_Distribution_Pies.png" width="70%" alt="Pixel Distribution">
+  <img src="figs/Fig1_Distribution_Pies.png" width="80%" alt="Pixel Distribution">
 </p>
 <p align="center">
   <em>Figure 1: Pixel-level distribution (Left) and global class balance (Right).</em>
