@@ -42,7 +42,7 @@ The dataset is composed of diverse scenes with varying water coverage ratios.
 </p>
 
 <p align="center">
-  <img src="figs/Fig4_Water_Ratio_Box.png" width="60%" alt="Water Ratio Boxplot">
+  <img src="figs/Fig4_Water_Ratio_Box.png" width="40%" alt="Water Ratio Boxplot">
 </p>
 <p align="center">
   <em>Figure 4: Distribution of water pixel ratios per scene.</em>
