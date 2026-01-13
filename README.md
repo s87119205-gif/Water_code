@@ -28,11 +28,17 @@ The dataset is composed of diverse scenes with varying water coverage ratios.
 - **Fig 4** displays the variability of water coverage per image.
 
 <p align="center">
-  <img src="figs/Fig1_Distribution_Pies.png" width="48%" alt="Pixel Distribution">
-  <img src="figs/Fig2_Scene_Counts.png" width="48%" alt="Scene Counts">
+  <img src="figs/Fig1_Distribution_Pies.png" width="70%" alt="Pixel Distribution">
 </p>
 <p align="center">
-  <em>Figure 1: Pixel-level distribution (Left) & Figure 2: Scene counts per satellite (Right).</em>
+  <em>Figure 1: Pixel-level distribution (Left) and global class balance (Right).</em>
+</p>
+
+<p align="center">
+  <img src="figs/Fig2_Scene_Counts.png" width="70%" alt="Scene Counts">
+</p>
+<p align="center">
+  <em>Figure 2: Quantitative breakdown of scene counts per satellite sensor.</em>
 </p>
 
 <p align="center">
@@ -42,22 +48,7 @@ The dataset is composed of diverse scenes with varying water coverage ratios.
   <em>Figure 4: Distribution of water pixel ratios per scene.</em>
 </p>
 
-### 2. Geographical Distribution
-
-To evaluate the generalization capability of segmentation models, samples were collected globally across various continents and climatic zones. 
-
-- **Fig 5** depicts the geolocation of each image scene. 
-- The dataset covers a wide range of hydrological environments, distributed across **Asia, Europe, North America, South America, Africa, and Oceania**.
-- Different colors represent different satellite sensors, ensuring that the multi-source data is not spatially biased.
-
-<p align="center">
-  <img src="figs/Fig5_Geo_Distribution.png" width="90%" alt="Geographical Distribution Map">
-</p>
-<p align="center">
-  <em>Figure 5: Global geographical distribution of the dataset scenes, color-coded by satellite sensor (e.g., Red: Landsat-5, Purple: Sentinel-2).</em>
-</p>
-
-### 3. Sample Visualization
+### 2. Sample Visualization
 The dataset includes high-resolution multispectral images with corresponding binary water masks. All images are pre-processed (percentile stretching) for visualization.
 
 - **Input:** Multispectral optical images (Visualized in RGB).
@@ -69,6 +60,23 @@ The dataset includes high-resolution multispectral images with corresponding bin
 <p align="center">
   <em>Figure 3: Representative samples of optical images (Left) and their corresponding ground truth labels (Right).</em>
 </p>
+
+### 3. Geographical Distribution
+
+To evaluate the generalization capability of segmentation models, samples were collected globally across various continents and climatic zones. 
+
+- **Fig 5** depicts the geolocation of each image scene. 
+- The dataset covers a wide range of hydrological environments, distributed across **Asia, Europe, North America, South America, Africa, and Oceania**.
+- Different colors represent different satellite sensors, ensuring that the multi-source data is not spatially biased.
+
+<p align="center">
+  <img src="figs/Satellite_Distribution_Map.png" width="90%" alt="Geographical Distribution Map">
+</p>
+<p align="center">
+  <em>Figure 5: Global geographical distribution of the dataset scenes, color-coded by satellite sensor .</em>
+</p>
+
+
 
 
 
