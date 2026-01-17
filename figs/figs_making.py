@@ -1,6 +1,5 @@
 # ============================================================
-# Publication-Quality Visualization Script (Refined)
-# For multispectral water body dataset (Landsat + Sentinel-2)
+# Publication-Quality Visualization Script (Fixed RGB)
 # ============================================================
 
 import os
@@ -8,9 +7,10 @@ import rasterio
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+import matplotlib.ticker as mtick
 from collections import defaultdict
 
-# Try to use seaborn for better aesthetics
+# Optional: Seaborn style
 try:
     import seaborn as sns
     sns.set_context("paper")
@@ -25,76 +25,86 @@ except ImportError:
 CONFIG = {
     "SCENE_DIR": r"D:\A_DATA\scene",
     "TRUTH_DIR": r"D:\A_DATA\truth",
-    # Update sample names to match your actual file list if needed
     "SAMPLE_SCENES": [
         "I8_scene_12.tif",
         "S2A_L2A_20190314_N0211_R008_S3.tif" 
     ],
     "OUTPUT_DIR": r"D:\A_DATA\figures",
     "DPI": 300,
-    "FONT_FAMILY": "Arial", # Suggested for papers
+    "FONT_FAMILY": "Arial",
     "FONT_SIZE": 10
 }
 
 # ======================
-# Utility Functions
+# Band Configuration
 # ======================
 
-def setup_plot_style():
-    """Configure matplotlib for publication standards."""
-    plt.rcParams['font.family'] = CONFIG["FONT_FAMILY"]
-    plt.rcParams['font.size'] = CONFIG["FONT_SIZE"]
-    plt.rcParams['axes.titlesize'] = CONFIG["FONT_SIZE"] + 2
-    plt.rcParams['axes.labelsize'] = CONFIG["FONT_SIZE"]
-    plt.rcParams['xtick.labelsize'] = CONFIG["FONT_SIZE"]
-    plt.rcParams['ytick.labelsize'] = CONFIG["FONT_SIZE"]
-    os.makedirs(CONFIG["OUTPUT_DIR"], exist_ok=True)
+def get_rgb_bands(satellite_type):
+    """
+    Returns the band indices for (Red, Green, Blue) based on sensor type.
+    Rasterio uses 1-based indexing.
+    """
+    # Map: Satellite -> [Red_Index, Green_Index, Blue_Index]
+    BAND_MAP = {
+        "Sentinel-2": [4, 3, 2], # S2: B4(Red), B3(Green), B2(Blue)
+        "Landsat-8":  [3, 2, 1], # L8: B5(Red), B4(Green), B3(Blue)
+        "Landsat-9":  [5, 4, 3], # L9: B5(Red), B4(Green), B3(Blue)
+        "Landsat-5":  [3, 2, 1], # L5: B3(Red), B2(Green), B1(Blue)
+        "Landsat-7":  [3, 2, 1], # L7: B3(Red), B2(Green), B1(Blue)
+        "Other":      [1, 2, 3]  # Fallback
+    }
+    return BAND_MAP.get(satellite_type, [1, 2, 3])
 
 def detect_satellite(fname):
-    """
-    Identify satellite type based on specific naming conventions.
-    Rules:
-    - I5_... -> Landsat-5
-    - I7_... -> Landsat-7
-    - I8_... -> Landsat-8
-    - I9_... -> Landsat-9
-    - S2...  -> Sentinel-2
-    """
-    # Remove _truth suffix if present to check the original ID
+    """Detect satellite from filename."""
     clean_name = fname.replace("_truth.tif", "")
-    
-    if clean_name.startswith("I5"):
-        return "Landsat-5"
-    elif clean_name.startswith("I7"):
-        return "Landsat-7"
-    elif clean_name.startswith("I8"):
-        return "Landsat-8"
-    elif clean_name.startswith("I9"):
-        return "Landsat-9"
-    elif clean_name.startswith("S2"):
-        return "Sentinel-2"
-    else:
-        return "Other"
+    if clean_name.startswith("I5"): return "Landsat-5"
+    elif clean_name.startswith("I7"): return "Landsat-7"
+    elif clean_name.startswith("I8"): return "Landsat-8"
+    elif clean_name.startswith("I9"): return "Landsat-9"
+    elif clean_name.startswith("S2"): return "Sentinel-2"
+    else: return "Other"
 
-def read_multiband_image(path):
-    """Read image and apply 2%-98% percentile stretching for visualization."""
+# ======================
+# I/O Functions
+# ======================
+
+def read_multiband_image(path, satellite_type):
+    """
+    Reads specific RGB bands and applies robust stretching.
+    """
     try:
+        rgb_indices = get_rgb_bands(satellite_type)
+        
         with rasterio.open(path) as src:
-            # Read RGB bands (Assuming bands 1,2,3 are R,G,B or similar visible)
-            img = src.read([1, 2, 3]) 
-            img = np.transpose(img, (1, 2, 0))
+            # Check if file has enough bands
+            if src.count < max(rgb_indices):
+                print(f"Warning: {path} has {src.count} bands, but tried to read {rgb_indices}")
+                # Fallback to first 3 bands if indices are out of bounds
+                img = src.read([1, 2, 3])
+            else:
+                img = src.read(rgb_indices) # Read (R, G, B) order
             
-            # Robust normalization
-            p2, p98 = np.percentile(img, (2, 98))
+            img = np.transpose(img, (1, 2, 0)) # (H, W, Bands)
+            
+            # --- Robust Percentile Stretching ---
+            # Exclude 0 values (often NoData) from percentile calculation
+            valid_mask = img > 0
+            if valid_mask.any():
+                p2 = np.percentile(img[valid_mask], 2)
+                p98 = np.percentile(img[valid_mask], 98)
+            else:
+                p2, p98 = 0, 1
+            
             img = np.clip(img, p2, p98)
             img = (img - p2) / (p98 - p2 + 1e-6)
+            
             return np.clip(img, 0, 1)
     except Exception as e:
-        print(f"Warning: Could not read image {path}: {e}")
+        print(f"Error reading {path}: {e}")
         return None
 
 def read_label(path):
-    """Read binary mask."""
     try:
         with rasterio.open(path) as src:
             return src.read(1)
@@ -102,226 +112,233 @@ def read_label(path):
         return None
 
 # ======================
-# Statistics Calculation
+# Statistics (Unchanged)
 # ======================
-
 def calculate_dataset_stats():
-    """
-    Iterate strictly through TRUTH_DIR to ensure 1-to-1 matching.
-    Returns:
-        - sat_pixel_counts: Total pixels per satellite type
-        - sat_scene_counts: Number of images per satellite type
-        - water_counts: Global Water vs Non-Water pixel counts
-        - water_ratios: List of water ratios per image
-    """
     sat_pixel_counts = defaultdict(int)
     sat_scene_counts = defaultdict(int)
     water_counts = {"Water": 0, "Non-water": 0}
     water_ratios = []
-
-    print("Scanning dataset statistics...")
     
+    # [Same logic as previous, iterating TRUTH_DIR]
+    print("Scanning dataset statistics...")
     truth_files = [f for f in os.listdir(CONFIG["TRUTH_DIR"]) if f.endswith("_truth.tif")]
     
-    if not truth_files:
-        print("Error: No *_truth.tif files found in TRUTH_DIR!")
-        return None, None, None, None
-
     for f in truth_files:
         path = os.path.join(CONFIG["TRUTH_DIR"], f)
-        
-        # 1. Identify Satellite
         sat_type = detect_satellite(f)
         sat_scene_counts[sat_type] += 1
-        
-        # 2. Read Meta and Label
         try:
             with rasterio.open(path) as src:
-                # Use metadata for shape to avoid reading full array if possible
-                h, w = src.height, src.width
-                total_pixels = h * w
-                sat_pixel_counts[sat_type] += total_pixels
-                
-                # Read actual data for water counts
+                sat_pixel_counts[sat_type] += src.width * src.height
                 lbl = src.read(1)
                 w_pix = np.sum(lbl == 1)
-                
                 water_counts["Water"] += int(w_pix)
-                water_counts["Non-water"] += int(total_pixels - w_pix)
-                water_ratios.append(w_pix / total_pixels)
-        except Exception as e:
-            print(f"Skipping {f}: {e}")
-
+                water_counts["Non-water"] += int(lbl.size - w_pix)
+                water_ratios.append(w_pix / lbl.size)
+        except: pass
+        
     return sat_pixel_counts, sat_scene_counts, water_counts, water_ratios
 
 # ======================
-# Plotting Functions
+# Plotting
 # ======================
 
-def plot_combined_pie_charts(sat_pixels, water_counts):
-    """Fig 1: Two pie charts merged (Pixel Dist + Water/Non-Water)."""
-    fig, axes = plt.subplots(1, 2, figsize=(11, 5))
+def plot_combined_statistics(sat_pixels, sat_scenes, water_counts):
+    """
+    Fig 1 Revised V2:
+    - Fixed missing values on the right chart.
+    - Fixed excessive gap between charts and captions.
+    - Optimized label positions.
+    """
+    # Create figure with a tighter layout ratio
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
     
-    # Colors
-    colors_sat = ['#4c72b0', '#55a868', '#c44e52', '#8172b3', '#ccb974'] # Muted
-    colors_water = ['#3498db', '#95a5a6'] # Blue / Grey
+    # --- Color Palette ---
+    sat_keys = sorted(list(sat_pixels.keys()))
+    colors_sat = ['#4c72b0', '#55a868', '#c44e52', '#8172b3', '#ccb974', '#64b5cd'][:len(sat_keys)]
+    colors_water = ['#3498db', '#95a5a6'] 
 
-    # --- Left: Satellite Pixel Distribution ---
-    labels_sat = sorted(list(sat_pixels.keys())) # Sort for consistency
-    values_sat = [sat_pixels[k] for k in labels_sat]
+    # ===================================================
+    # SUBPLOT 1: Satellite Composition (Double Donut)
+    # ===================================================
+    ax1 = axes[0]
     
-    axes[0].pie(values_sat, labels=labels_sat, autopct="%.1f%%", 
-                startangle=90, pctdistance=0.85, colors=colors_sat,
-                wedgeprops=dict(width=0.4, edgecolor='w'))
-    axes[0].set_title("(a) Pixel Contribution by Satellite", y=-0.05, fontweight='bold')
+    vals_outer = [sat_pixels[k] for k in sat_keys]
+    vals_inner = [sat_scenes[k] for k in sat_keys]
+    
+    # --- Outer Ring (Pixel Ratio) ---
+    wedges_o, texts_o, autotexts_o = ax1.pie(
+        vals_outer, radius=1.0, 
+        colors=colors_sat,
+        wedgeprops=dict(width=0.3, edgecolor='white', linewidth=1.5),
+        autopct='%.1f%%', 
+        pctdistance=0.85, # Center of the outer ring (0.7 to 1.0)
+        startangle=90
+    )
+    
+    # --- Inner Ring (Scene Counts) ---
+    def make_autopct(values):
+        def my_autopct(pct):
+            total = sum(values)
+            val = int(round(pct*total/100.0))
+            return '{v:d}'.format(v=val)
+        return my_autopct
 
-    # --- Right: Water Distribution ---
+    wedges_i, texts_i, autotexts_i = ax1.pie(
+        vals_inner, radius=0.68, 
+        colors=colors_sat,
+        wedgeprops=dict(width=0.3, edgecolor='white', linewidth=1.5),
+        autopct=make_autopct(vals_inner),
+        pctdistance=0.78, # Center of the inner ring (0.38 to 0.68)
+        startangle=90
+    )
+
+    # Style Labels
+    plt.setp(autotexts_o, size=9, weight="bold", color="white")
+    plt.setp(autotexts_i, size=9, weight="bold", color="white")
+
+    # Legend
+    ax1.legend(wedges_o, sat_keys, title="Satellite Platform",
+               loc="center", bbox_to_anchor=(0.5, 0.5),
+               fontsize=9, frameon=False, alignment='center')
+
+    # Annotations (Top Left)
+    # text coords relative to axes
+    ax1.text(-0.05, 1.02, "Outer Ring: Pixel Contribution (%)", transform=ax1.transAxes, 
+             fontsize=10, fontweight='bold', ha='left', color='#333333')
+    ax1.text(-0.05, 0.96, "Inner Ring: Scene Count (N)", transform=ax1.transAxes, 
+             fontsize=10, fontweight='bold', ha='left', color='#333333')
+
+    # Title - Using Data Coordinates to fix the gap
+    # Radius is 1.0, so -1.2 places it just below the circle regardless of subplot size
+    ax1.text(0, -1.2, "(a) Dataset Composition", 
+             ha='center', va='top', fontweight='bold', fontsize=12, color='black')
+
+    # ===================================================
+    # SUBPLOT 2: Water Distribution (Right Chart)
+    # ===================================================
+    ax2 = axes[1]
+    
     labels_w = list(water_counts.keys())
     values_w = list(water_counts.values())
     
-    axes[1].pie(values_w, labels=labels_w, autopct="%.1f%%", 
-                startangle=140, pctdistance=0.85, colors=colors_water,
-                wedgeprops=dict(width=0.4, edgecolor='w'))
-    axes[1].set_title("(b) Global Pixel Class Distribution", y=-0.05, fontweight='bold')
+    # Explicitly calculate pctdistance. 
+    # Radius=1.0, Width=0.4 => Ring is 0.6 to 1.0. Center is 0.8.
+    wedges_w, texts_w, autotexts_w = ax2.pie(
+        values_w, 
+        labels=None, 
+        autopct="%.1f%%", 
+        startangle=140, 
+        colors=colors_water,
+        pctdistance=0.8, # CRITICAL FIX: Position text in the middle of the colored ring
+        wedgeprops=dict(width=0.4, edgecolor='white', linewidth=2)
+    )
+    
+    # Force text color and weight
+    for autotext in autotexts_w:
+        autotext.set_color('white')
+        autotext.set_fontweight('bold')
+        autotext.set_fontsize(11)
 
+    # Legend inside the donut
+    ax2.legend(wedges_w, labels_w, title="Pixel Class",
+               loc="center", bbox_to_anchor=(0.5, 0.5),
+               fontsize=10, frameon=False)
+               
+    # Title - Close to chart
+    ax2.text(0, -1.2, "(b) Global Pixel Class Balance", 
+             ha='center', va='top', fontweight='bold', fontsize=12, color='black')
+
+    # ===================================================
+    # Saving
+    # ===================================================
+    # Remove default titles if any were set by layout managers
+    ax1.set_title("")
+    ax2.set_title("")
+    
     plt.tight_layout()
-    save_path = os.path.join(CONFIG["OUTPUT_DIR"], "Fig1_Distribution_Pies.pdf")
+    # Add a small padding at bottom for the manually placed titles
+    plt.subplots_adjust(bottom=0.15) 
+    
+    save_path = os.path.join(CONFIG["OUTPUT_DIR"], "Fig1_Combined_Stats_V2.pdf")
     plt.savefig(save_path, dpi=CONFIG["DPI"], bbox_inches='tight')
-    plt.savefig(save_path.replace(".pdf", ".png"), dpi=CONFIG["DPI"])
+    plt.savefig(save_path.replace(".pdf", ".png"), dpi=CONFIG["DPI"], bbox_inches='tight')
     print(f"[Saved] {save_path}")
     plt.close()
 
-def plot_scene_counts_bar(sat_scene_counts):
-    """Fig 2: Bar chart showing number of images per satellite."""
-    fig, ax = plt.subplots(figsize=(7, 5))
-    
-    labels = sorted(list(sat_scene_counts.keys()))
-    values = [sat_scene_counts[k] for k in labels]
-    
-    # Bar plot
-    bars = ax.bar(labels, values, color='#4c72b0', edgecolor='black', alpha=0.8, width=0.6)
-    
-    # Labels and Title
-    ax.set_ylabel("Number of Scenes")
-    ax.set_title("Dataset Composition by Scene Count")
-    
-    # Add count labels on top of bars
-    for bar in bars:
-        height = bar.get_height()
-        ax.annotate(f'{height}',
-                    xy=(bar.get_x() + bar.get_width() / 2, height),
-                    xytext=(0, 3),  # 3 points vertical offset
-                    textcoords="offset points",
-                    ha='center', va='bottom', fontweight='bold')
-    
-    # Remove top and right spines for cleaner look
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-    ax.grid(axis='y', linestyle='--', alpha=0.3)
-
+def plot_water_distribution(ratios):
+    # [Same as previous Histogram Code]
+    ratios_pct = [r * 100 for r in ratios]
+    plt.figure(figsize=(8, 5))
+    try:
+        sns.histplot(ratios_pct, kde=True, bins=20, color='#4c72b0', alpha=0.7)
+    except:
+        plt.hist(ratios_pct, bins=20, color='#4c72b0', alpha=0.7)
+    plt.xlabel("Water Coverage Ratio (%)", fontweight='bold')
+    plt.ylabel("Number of Scenes", fontweight='bold')
+    plt.gca().xaxis.set_major_formatter(mtick.PercentFormatter(xmax=100))
+    plt.gca().spines['top'].set_visible(False)
+    plt.gca().spines['right'].set_visible(False)
+    plt.grid(axis='y', linestyle='--', alpha=0.3)
     plt.tight_layout()
-    save_path = os.path.join(CONFIG["OUTPUT_DIR"], "Fig2_Scene_Counts.pdf")
-    plt.savefig(save_path, dpi=CONFIG["DPI"], bbox_inches='tight')
-    plt.savefig(save_path.replace(".pdf", ".png"), dpi=CONFIG["DPI"])
-    print(f"[Saved] {save_path}")
+    plt.savefig(os.path.join(CONFIG["OUTPUT_DIR"], "Fig3_Water_Hist.png"), dpi=CONFIG["DPI"])
     plt.close()
 
 def plot_samples():
-    """Fig 3: Visual samples with correct matching."""
+    """Fig 2: Visual Samples with CORRECT RGB mapping."""
     num_samples = len(CONFIG["SAMPLE_SCENES"])
     fig = plt.figure(figsize=(8, 4 * num_samples))
     gs = gridspec.GridSpec(num_samples, 2, width_ratios=[1, 1], wspace=0.05, hspace=0.2)
 
     for i, scene_name in enumerate(CONFIG["SAMPLE_SCENES"]):
-        # Construct paths
-        img_path = os.path.join(CONFIG["SCENE_DIR"], scene_name)
-        # Truth name logic: name.tif -> name_truth.tif
         truth_name = scene_name.replace(".tif", "_truth.tif")
-        lbl_path = os.path.join(CONFIG["TRUTH_DIR"], truth_name)
+        
+        # 1. Detect Satellite Type first
+        sat_type = detect_satellite(scene_name)
+        
+        # 2. Pass type to reader to get correct bands
+        img = read_multiband_image(os.path.join(CONFIG["SCENE_DIR"], scene_name), sat_type)
+        lbl = read_label(os.path.join(CONFIG["TRUTH_DIR"], truth_name))
 
-        img = read_multiband_image(img_path)
-        lbl = read_label(lbl_path)
+        if img is None or lbl is None: continue
 
-        # Skip if file not found
-        if img is None or lbl is None:
-            print(f"Skipping sample {scene_name} (File not found)")
-            continue
-
-        # Plot Image
+        # Plot RGB
         ax1 = plt.subplot(gs[i, 0])
         ax1.imshow(img)
         ax1.axis("off")
-        ax1.text(0.02, 0.98, f"Sample {i+1} (RGB)", transform=ax1.transAxes,
-                 color='white', fontweight='bold', va='top', bbox=dict(facecolor='black', alpha=0.5, pad=2))
+        ax1.text(0.02, 0.98, f"Sample {i+1} ({sat_type})", transform=ax1.transAxes,
+                 color='white', fontweight='bold', va='top', bbox=dict(facecolor='black', alpha=0.5))
 
         # Plot Label
         ax2 = plt.subplot(gs[i, 1])
         ax2.imshow(lbl, cmap="Blues", interpolation='nearest')
         ax2.axis("off")
         ax2.text(0.02, 0.98, "Ground Truth", transform=ax2.transAxes,
-                 color='black', fontweight='bold', va='top', bbox=dict(facecolor='white', alpha=0.7, pad=2))
+                 color='black', fontweight='bold', va='top', bbox=dict(facecolor='white', alpha=0.7))
 
-    save_path = os.path.join(CONFIG["OUTPUT_DIR"], "Fig3_Visual_Samples.pdf")
+    save_path = os.path.join(CONFIG["OUTPUT_DIR"], "Fig2_Samples.png")
+    # Also save PDF for paper
+    plt.savefig(save_path.replace(".png", ".pdf"), dpi=CONFIG["DPI"], bbox_inches='tight')
     plt.savefig(save_path, dpi=CONFIG["DPI"], bbox_inches='tight')
-    plt.savefig(save_path.replace(".pdf", ".png"), dpi=CONFIG["DPI"])
     print(f"[Saved] {save_path}")
     plt.close()
 
-def plot_boxplot(ratios):
-    """Fig 4: Water ratio distribution boxplot."""
-    plt.figure(figsize=(6, 5))
-    
-    boxprops = dict(linestyle='-', linewidth=1.5, color='#4c72b0')
-    medianprops = dict(linestyle='-', linewidth=2, color='#c44e52')
-    flierprops = dict(marker='o', markerfacecolor='gray', markersize=4, alpha=0.5)
-
-    plt.boxplot(ratios, vert=True, patch_artist=False,
-                boxprops=boxprops, medianprops=medianprops, flierprops=flierprops,
-                widths=0.4)
-    
-    plt.ylabel("Water Pixel Ratio (0-1)")
-    plt.title("Distribution of Water Coverage per Scene")
-    plt.grid(axis='y', linestyle='--', alpha=0.5)
-    plt.xticks([])
-
-    save_path = os.path.join(CONFIG["OUTPUT_DIR"], "Fig4_Water_Ratio_Box.pdf")
-    plt.savefig(save_path, dpi=CONFIG["DPI"], bbox_inches='tight')
-    plt.savefig(save_path.replace(".pdf", ".png"), dpi=CONFIG["DPI"])
-    print(f"[Saved] {save_path}")
-    plt.close()
-
-# ======================
-# Main Execution
-# ======================
+def setup_plot_style():
+    plt.rcParams['font.family'] = CONFIG["FONT_FAMILY"]
+    plt.rcParams['font.size'] = CONFIG["FONT_SIZE"]
+    os.makedirs(CONFIG["OUTPUT_DIR"], exist_ok=True)
 
 def main():
     setup_plot_style()
-    
-    # 1. Compute Stats
+    print("Calculating stats...")
     sat_pixels, sat_scenes, water_counts, ratios = calculate_dataset_stats()
     
-    if sat_pixels is None:
-        return
-
-    # 2. Generate Figures
-    print("\n--- Generating Figures ---")
-    
-    # Fig 1: Pie Charts
     if sat_pixels:
-        plot_combined_pie_charts(sat_pixels, water_counts)
-    
-    # Fig 2: Scene Counts Bar Chart (New Request)
-    if sat_scenes:
-        plot_scene_counts_bar(sat_scenes)
-
-    # Fig 3: Samples
-    plot_samples()
-
-    # Fig 4: Boxplot
-    if ratios:
-        plot_boxplot(ratios)
-
-    print("\nAll tasks completed successfully.")
+        plot_combined_statistics(sat_pixels, sat_scenes, water_counts)
+        plot_water_distribution(ratios)
+        print("Visualizing samples with True Color RGB...")
+        plot_samples() # This now uses the fixed logic
 
 if __name__ == "__main__":
     main()

@@ -19,57 +19,55 @@ Deep learning-based water bodies mapping using Landsat-5, 7, 8 , 9 images and Se
 
 ## 📊 Dataset Description
 
-### 1. Statistical Distribution
-The dataset is composed of diverse scenes with varying water coverage ratios. 
+This dataset focuses on multispectral water body segmentation, integrating optical imagery from multiple satellite platforms (**Landsat-5/7/8/9** and **Sentinel-2**) to ensure model robustness across different resolutions and sensors.
 
-- **Fig 1(a)** illustrates the pixel-level contribution from each satellite platform.
-- **Fig 1(b)** shows the global class balance between water and non-water pixels.
-- **Fig 2** provides the quantitative breakdown of scene counts per satellite sensor.
-- **Fig 4** displays the variability of water coverage per image.
+### 1. Statistical Overview
+The dataset structure is analyzed in **Figure 1**, providing a dual-perspective on data composition:
 
-<p align="center">
-  <img src="figures/Fig1_Distribution_Pies.png" width="48%" alt="Pixel Distribution">
-  <img src="figures/Fig2_Scene_Counts.png" width="48%" alt="Scene Counts">
-</p>
-<p align="center">
-  <em>Figure 1: Pixel-level distribution (Left) & Figure 2: Scene counts per satellite (Right).</em>
-</p>
+- **(a) Dataset Composition (Left):** A nested donut chart illustrating the data source distribution.
+    - **Outer Ring:** Represents the **Pixel Contribution (%)**. This reflects the total data volume used for training.
+    - **Inner Ring:** Displays the explicit **Scene Count (N)**. 
+    - *Insight:* Comparing the rings reveals sensor characteristics; for instance, Sentinel-2 may have fewer scenes (Inner) but contributes a significant number of pixels (Outer) due to high resolution or larger swath coverage.
+- **(b) Class Balance (Right):** Shows the global ratio between Water and Non-water (Background) pixels, highlighting the class imbalance typical in remote sensing tasks.
 
 <p align="center">
-  <img src="figures/Fig4_Water_Ratio_Box.png" width="60%" alt="Water Ratio Boxplot">
+  <img src="figs/Fig1_Combined_Stats_V2.png" width="95%" alt="Statistical Overview">
 </p>
 <p align="center">
-  <em>Figure 4: Distribution of water pixel ratios per scene.</em>
+  <em>Figure 1: (a) Nested donut chart showing pixel contribution (Outer) vs. scene count (Inner); (b) Global water vs. non-water pixel ratio.</em>
 </p>
 
-### 2. Geographical Distribution
+### 2. Data Diversity & Distribution
+To evaluate generalization capability, the dataset includes scenes with varying water body sizes and geographical locations.
 
-To evaluate the generalization capability of segmentation models, samples were collected globally across various continents and climatic zones. 
-
-- **Fig 5** depicts the geolocation of each image scene. 
-- The dataset covers a wide range of hydrological environments, distributed across **Asia, Europe, North America, South America, Africa, and Oceania**.
-- Different colors represent different satellite sensors, ensuring that the multi-source data is not spatially biased.
+- **Water Coverage Distribution (Fig 2):** The histogram with a Kernel Density Estimation (KDE) curve shows the frequency of water coverage ratios. The distribution confirms a diverse mix of **small water bodies** (e.g., ponds, narrow rivers) and **large hydrological features** (e.g., lakes, oceans).
+- **Geographical Distribution (Fig 3):** Samples are collected globally across **Asia, Europe, North America, South America, Africa, and Oceania**, ensuring no spatial bias towards a specific region.
 
 <p align="center">
-  <img src="figures/Fig5_Geo_Distribution.png" width="90%" alt="Geographical Distribution Map">
+  <img src="figs/Fig2_Water_Hist.png" width="70%" alt="Water Ratio Distribution">
 </p>
 <p align="center">
-  <em>Figure 5: Global geographical distribution of the dataset scenes, color-coded by satellite sensor (e.g., Red: Landsat-5, Purple: Sentinel-2).</em>
+  <em>Figure 2: Frequency distribution of water coverage ratios per scene.</em>
 </p>
-
-### 3. Sample Visualization
-The dataset includes high-resolution multispectral images with corresponding binary water masks. All images are pre-processed (percentile stretching) for visualization.
-
-- **Input:** Multispectral optical images (Visualized in RGB).
-- **Ground Truth:** Binary masks where white represents water bodies and black represents the background.
 
 <p align="center">
-  <img src="figures/Fig3_Visual_Samples.png" width="80%" alt="Visual Samples">
+  <img src="figs/Fig3_Satellite_Distribution_Map.png" width="90%" alt="Geographical Distribution Map">
 </p>
 <p align="center">
-  <em>Figure 3: Representative samples of optical images (Left) and their corresponding ground truth labels (Right).</em>
+  <em>Figure 3: Global geographical distribution of the dataset scenes, color-coded by satellite sensor.</em>
 </p>
 
+### 3. Visual Samples
+Each sample consists of a multispectral optical image and a pixel-level binary ground truth mask. 
 
+- **Preprocessing:** Images are visualized in **True Color (RGB)** using sensor-specific band combinations (e.g., Bands 4-3-2 for Sentinel-2/Landsat-8, Bands 3-2-1 for Landsat-5/7) and robust 2%-98% percentile stretching.
+- **Ground Truth:** Binary masks where **White** indicates water and **Black** indicates background.
+
+<p align="center">
+  <img src="figs/Fig4_Samples.png" width="80%" alt="Visual Samples">
+</p>
+<p align="center">
+  <em>Figure 4: Representative samples. Left: True Color RGB images; Right: Ground Truth water masks.</em>
+</p>
 
 ### **---To do**
