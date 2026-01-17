@@ -57,47 +57,17 @@ To evaluate generalization capability, the dataset includes scenes with varying 
   <em>Figure 3: Global geographical distribution of the dataset scenes, color-coded by satellite sensor.</em>
 </p>
 
-<<<<<<< HEAD
 ### 3. Visual Samples
 Each sample consists of a multispectral optical image and a pixel-level binary ground truth mask. 
-=======
-### 2. Sample Visualization
-The dataset includes high-resolution multispectral images with corresponding binary water masks. All images are pre-processed (percentile stretching) for visualization.
-
-- **Input:** Multispectral optical images (Visualized in RGB).
-- **Ground Truth:** Binary masks where white represents water bodies and black represents the background.
-
-<p align="center">
-  <img src="figs/Fig3_Visual_Samples.png" width="80%" alt="Visual Samples">
-</p>
-<p align="center">
-  <em>Figure 3: Representative samples of optical images (Left) and their corresponding ground truth labels (Right).</em>
-</p>
-
-### 3. Geographical Distribution
->>>>>>> 16e230d20b8663419ea56684f0967d7a9d25827d
 
 - **Preprocessing:** Images are visualized in **True Color (RGB)** using sensor-specific band combinations (e.g., Bands 4-3-2 for Sentinel-2/Landsat-8, Bands 3-2-1 for Landsat-5/7) and robust 2%-98% percentile stretching.
 - **Ground Truth:** Binary masks where **White** indicates water and **Black** indicates background.
 
 <p align="center">
-<<<<<<< HEAD
   <img src="figs/Fig4_Samples.png" width="80%" alt="Visual Samples">
 </p>
 <p align="center">
   <em>Figure 4: Representative samples. Left: True Color RGB images; Right: Ground Truth water masks.</em>
 </p>
 
-=======
-  <img src="figs/Satellite_Distribution_Map.png" width="90%" alt="Geographical Distribution Map">
-</p>
-<p align="center">
-  <em>Figure 5: Global geographical distribution of the dataset scenes, color-coded by satellite sensor .</em>
-</p>
-
-
-
-
-
->>>>>>> 16e230d20b8663419ea56684f0967d7a9d25827d
 ### **---To do**
