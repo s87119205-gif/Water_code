@@ -40,21 +40,14 @@ The dataset structure is analyzed in **Figure 1**, providing a dual-perspective 
 ### 2. Data Diversity & Distribution
 To evaluate generalization capability, the dataset includes scenes with varying water body sizes and geographical locations.
 
-- **Water Coverage Distribution (Fig 2):** The histogram with a Kernel Density Estimation (KDE) curve shows the frequency of water coverage ratios. The distribution confirms a diverse mix of **small water bodies** (e.g., ponds, narrow rivers) and **large hydrological features** (e.g., lakes, oceans).
-- **Geographical Distribution (Fig 3):** Samples are collected globally across **Asia, Europe, North America, South America, Africa, and Oceania**, ensuring no spatial bias towards a specific region.
+- **Geographical Distribution (Fig 2):** Samples are collected globally across **Asia, Europe, North America, South America, Africa, and Oceania**, ensuring no spatial bias towards a specific region.
+
 
 <p align="center">
-  <img src="figs/Fig2_Water_Hist.png" width="70%" alt="Water Ratio Distribution">
+  <img src="figs/Fig2_Satellite_Distribution_Map.png" width="90%" alt="Geographical Distribution Map">
 </p>
 <p align="center">
-  <em>Figure 2: Frequency distribution of water coverage ratios per scene.</em>
-</p>
-
-<p align="center">
-  <img src="figs/Fig3_Satellite_Distribution_Map.png" width="90%" alt="Geographical Distribution Map">
-</p>
-<p align="center">
-  <em>Figure 3: Global geographical distribution of the dataset scenes, color-coded by satellite sensor.</em>
+  <em>Figure 2: Global geographical distribution of the dataset scenes, color-coded by satellite sensor.</em>
 </p>
 
 ### 3. Visual Samples
@@ -64,10 +57,10 @@ Each sample consists of a multispectral optical image and a pixel-level binary g
 - **Ground Truth:** Binary masks where **White** indicates water and **Black** indicates background.
 
 <p align="center">
-  <img src="figs/Fig4_Samples.png" width="80%" alt="Visual Samples">
+  <img src="figs/Fig3_Samples.png" width="80%" alt="Visual Samples">
 </p>
 <p align="center">
-  <em>Figure 4: Representative samples. Left: True Color RGB images; Right: Ground Truth water masks.</em>
+  <em>Figure 3: Representative samples. Left: True Color RGB images; Right: Ground Truth water masks.</em>
 </p>
 
 ### **---To do**
