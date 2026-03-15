@@ -1,28 +1,42 @@
-# Water_code
-**water bodies dataset for deep learning**
+# **WatSet (Surface water dataset for deep learning)**
 
 ### **--- Title**
 
 Deep learning-based water bodies mapping using Landsat-5, 7, 8 , 9 images and Sentinel 2 images .
 
-### **--- Content**
-
-* Tutorial of remote sensing image acquisition and groud truth labeling.
-* Tutorial of remote sensing data loader for deep learning.
-* Tutorial of deep learning model building (take unet as example).
-* Tutorial of deep learning model training and validation.
-
-### **--- Ongoing image labeling**
-
-* Number of labeled image reach to 215!! 🎉
-* If you are interested in this propject, welcome to join us! 👏
 
 ## 📊 Dataset Description
 
 This dataset focuses on multispectral water body segmentation, integrating optical imagery from multiple satellite platforms (**Landsat-5/7/8/9** and **Sentinel-2**) to ensure model robustness across different resolutions and sensors.
 
-### 1. Statistical Overview
-The dataset structure is analyzed in **Figure 1**, providing a dual-perspective on data composition:
+### 1. Data Diversity & Distribution
+To evaluate generalization capability, the dataset includes scenes with varying water body sizes and geographical locations.
+
+- **Geographical Distribution (Fig 2):** Samples are collected globally across **Asia, Europe, North America, South America, Africa, and Oceania**, ensuring no spatial bias towards a specific region.
+
+
+<p align="center">
+  <img src="figs/Fig1_Satellite_Distribution_Map.png" width="90%" alt="Geographical Distribution Map">
+</p>
+<p align="center">
+  <em>Figure 1: Global geographical distribution of the dataset scenes, color-coded by satellite sensor.</em>
+</p>
+
+
+Each sample consists of a multispectral optical image and a pixel-level binary ground truth mask. 
+
+- **Preprocessing:** Images are visualized in **True Color (RGB)** using sensor-specific band combinations and robust 2%-98% percentile stretching.
+- **Ground Truth:** Binary masks where **White** indicates water and **Black** indicates background.
+
+<p align="center">
+  <img src="figs/Fig2_Samples.png" width="80%" alt="Visual Samples">
+</p>
+<p align="center">
+  <em>Figure 2: Representative samples. Left: True Color RGB images; Right: Ground Truth water masks.</em>
+</p>
+
+### 2. Statistical Overview
+The dataset structure is analyzed in **Figure 3**, providing a dual-perspective on data composition:
 
 - **(a) Dataset Composition (Left):** A nested donut chart illustrating the data source distribution.
     - **Outer Ring:** Represents the **Pixel Contribution (%)**. This reflects the total data volume used for training.
@@ -30,37 +44,25 @@ The dataset structure is analyzed in **Figure 1**, providing a dual-perspective 
     - *Insight:* Comparing the rings reveals sensor characteristics; for instance, Sentinel-2 may have fewer scenes (Inner) but contributes a significant number of pixels (Outer) due to high resolution or larger swath coverage.
 - **(b) Class Balance (Right):** Shows the global ratio between Water and Non-water (Background) pixels, highlighting the class imbalance typical in remote sensing tasks.
 
-<p align="center">
-  <img src="figs/Fig1_Combined_Stats_V2.png" width="95%" alt="Statistical Overview">
+<p align="center"> 
+  <img src="figs/Fig3_Dataset_Stats.png" width="95%" alt="Statistical Overview">
 </p>
 <p align="center">
-  <em>Figure 1: (a) Nested donut chart showing pixel contribution (Outer) vs. scene count (Inner); (b) Global water vs. non-water pixel ratio.</em>
+  <em>Figure 3: (a) Nested donut chart showing pixel contribution (Outer) vs. scene count (Inner); (b) Global water vs. non-water pixel ratio.</em>
 </p>
 
-### 2. Data Diversity & Distribution
-To evaluate generalization capability, the dataset includes scenes with varying water body sizes and geographical locations.
-
-- **Geographical Distribution (Fig 2):** Samples are collected globally across **Asia, Europe, North America, South America, Africa, and Oceania**, ensuring no spatial bias towards a specific region.
-
-
-<p align="center">
-  <img src="figs/Fig2_Satellite_Distribution_Map.png" width="90%" alt="Geographical Distribution Map">
+### 3. Dataset Generation Workflow
+As illustrated in **Figure 4**, the dataset was constructed through a streamlined three-step pipeline to ensure high quality and accuracy.
+<p align="center"> 
+  <img src="figs/Fig4_Dataset_Generation_Workflow.png" width="95%" alt="Dataset Workflow">
 </p>
 <p align="center">
-  <em>Figure 2: Global geographical distribution of the dataset scenes, color-coded by satellite sensor.</em>
+  <em>Figure 4: The overall workflow of the proposed remote sensing waterbody dataset construction.</em>
 </p>
 
-### 3. Visual Samples
-Each sample consists of a multispectral optical image and a pixel-level binary ground truth mask. 
+1. **Data Acquisition & Preprocessing:** Multi-source satellite imagery (10m Sentinel-2 and 30m Landsat series) was retrieved and preprocessed (cloud filtering, clipping, and spatial resampling) using the Google Earth Engine (GEE) platform.
 
-- **Preprocessing:** Images are visualized in **True Color (RGB)** using sensor-specific band combinations (e.g., Bands 4-3-2 for Sentinel-2/Landsat-8, Bands 3-2-1 for Landsat-5/7) and robust 2%-98% percentile stretching.
-- **Ground Truth:** Binary masks where **White** indicates water and **Black** indicates background.
-
-<p align="center">
-  <img src="figs/Fig3_Samples.png" width="80%" alt="Visual Samples">
-</p>
-<p align="center">
-  <em>Figure 3: Representative samples. Left: True Color RGB images; Right: Ground Truth water masks.</em>
-</p>
+2. **Deep Learning Preliminary Mapping:** A deep learning model (WatNet) was utilized to automatically generate initial waterbody boundaries, which were then converted from raster to vector format.<br>
+3. **Post-processing & Quality Control:** GIS experts conducted rigorous visual inspection and manual correction on the preliminary vectors to produce the final, highly accurate Ground Truth Labels.
 
 ### **---To do**
